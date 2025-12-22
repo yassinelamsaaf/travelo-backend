@@ -10,7 +10,6 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
-    # MySQL service, inspired by docker-compose22.yml
     services:
       mysql-service:
         image: mysql:8.0
@@ -25,9 +24,8 @@ jobs:
           --health-timeout=5s
           --health-retries=10
 
-    # Same overrides as in docker-compose22.yml -> backend.environment
     env:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-service:3306/travelo_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/travelo_db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: yassine2004
 
