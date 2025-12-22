@@ -1,14 +1,14 @@
 package com.example.travelo_backend;
 
-import com.example.travelo_backend.controller.FlightController;
-import com.example.travelo_backend.controller.HelloController;
-import com.example.travelo_backend.service.FlightService;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import com.example.travelo_backend.controller.FlightController;
+import com.example.travelo_backend.controller.HelloController;
+import com.example.travelo_backend.service.FlightService;
 
 /**
  * Integration test for the Travelo Backend Application

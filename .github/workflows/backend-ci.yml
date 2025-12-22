@@ -10,6 +10,27 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    # MySQL service, inspired by docker-compose22.yml
+    services:
+      mysql-service:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: yassine2004
+          MYSQL_DATABASE: travelo_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -p$MYSQL_ROOT_PASSWORD"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    # Same overrides as in docker-compose22.yml -> backend.environment
+    env:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-service:3306/travelo_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: yassine2004
+
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
