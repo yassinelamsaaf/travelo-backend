@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+
+  mysql-service:
+    image: mysql:8.0
+    container_name: mysql-service
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: yassine2004
+      MYSQL_DATABASE: travelo_db
+    volumes:
+      - mysql_travelo_data:/var/lib/mysql
+    networks:
+      - travelo-network
+
+  backend:
+    image: localhost:5000/travelo-backend:1.0
+    container_name: travelo-backend
+    ports:
+      - 8080:8080
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-service:3306/travelo_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: yassine2004
+    depends_on:
+      - mysql-service
+    networks:
+      - travelo-network
+
+  frontend:
+    image: localhost:5000/travelo-frontend:v1.0
+    container_name: travelo-frontend
+    ports:
+      - 3000:3000
+    depends_on:
+      - backend
+    networks:
+      - travelo-network
+
+volumes:
+  mysql_travelo_data:
+    driver: local
+
+networks:
+  travelo-network:
+    driver: bridge

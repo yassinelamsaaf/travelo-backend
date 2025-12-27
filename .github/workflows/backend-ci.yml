@@ -1,0 +1,74 @@
+name: Backend CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t lamsaafyassine/travelo-backend:${{ github.sha }} .
+          docker build -t lamsaafyassine/travelo-backend:latest .
+          docker save lamsaafyassine/travelo-backend:${{ github.sha }} -o backend-image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-image
+          path: backend-image.tar
+          retention-days: 1
+  # Règle 1 - Scan de sécurité seulement sur main et PR vers main
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'refs/heads/main'
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+      - name: Load Docker image
+        run: docker load -i backend-image.tar
+      - name: Run security scan
+        run: |
+          echo "Running security scan"
+          # Ajoutez votre commande de scan ici
+          # Ex: trivy image lamsaafyassine/travelo-backend:${{ github.sha }}
+  push:
+    runs-on: ubuntu-latest
+    needs: [build, security-scan]
+    # Règle 2 - Push seulement après merge sur main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+
+      - name: Load Docker image
+        run: docker load -i backend-image.tar
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Tag and push Docker image
+        run: |
+          docker tag lamsaafyassine/travelo-backend:${{ github.sha }} lamsaafyassine/travelo-backend:latest
+          docker push lamsaafyassine/travelo-backend:${{ github.sha }}
+          docker push lamsaafyassine/travelo-backend:latest
