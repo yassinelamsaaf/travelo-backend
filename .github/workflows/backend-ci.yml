@@ -72,3 +72,32 @@ jobs:
           docker tag lamsaafyassine/travelo-backend:${{ github.sha }} lamsaafyassine/travelo-backend:latest
           docker push lamsaafyassine/travelo-backend:${{ github.sha }}
           docker push lamsaafyassine/travelo-backend:latest
+
+  GitOps-k8s-deploy:
+    runs-on: ubuntu-latest
+    needs: push
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout infra repo
+        uses: actions/checkout@v4
+        with:
+          # Replace with your infra repository if different
+          repository: yassinelamsaaf/travelo-infra
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          path: infra
+
+      - name: Update backend image tag
+        run: |
+          VERSION=${{ github.sha }}
+          echo "Updating infra/travelo-k8s/backend.yaml to image tag $VERSION"
+          sed -i "s|image: .*lamsaafyassine/travelo-backend:.*|image: lamsaafyassine/travelo-backend:${VERSION}|" infra/travelo-k8s/backend.yaml || true
+
+      - name: Commit & push changes
+        run: |
+          cd infra
+          git config user.name "github-actions"
+          git config user.email "ci@github.com"
+          git add travelo-k8s/backend.yaml
+          git commit -m "ci: update backend image to ${VERSION}" || echo "no changes to commit"
+          git push origin HEAD:main || echo "push failed"
