@@ -82,7 +82,7 @@ jobs:
       - name: Checkout infra repo
         uses: actions/checkout@v4
         with:
-          # Replace with your infra repository if different
+          # Replace with your infra repository if different ...
           repository: yassinelamsaaf/travelo-infra
           token: ${{ secrets.INFRA_REPO_TOKEN }}
           path: infra
