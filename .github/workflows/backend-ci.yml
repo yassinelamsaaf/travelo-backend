@@ -100,4 +100,7 @@ jobs:
           git config user.email "ci@github.com"
           git add travelo-k8s/backend.yaml
           git commit -m "ci: update backend image to ${VERSION}" || echo "no changes to commit"
-          git push origin HEAD:main || echo "push failed"
+          if ! git push origin HEAD:main; then
+            echo "push failed"
+            exit 1
+          fi
