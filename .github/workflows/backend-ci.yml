@@ -99,7 +99,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "ci@github.com"
           git add travelo-k8s/backend.yaml
-          git commit -m "ci: update backend image to ${VERSION}" || echo "no changes to commit"
+          git commit -m "ci: update backend image to ${{ github.sha }}" || echo "no changes to commit"
           if ! git push origin HEAD:main; then
             echo "push failed"
             exit 1
