@@ -8,99 +8,47 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    uses: Alae-J/travelo-ci-templates/.github/workflows/docker-build.yml@main
+    with:
+      image-name: lamsaafyassine/travelo-backend
+      artifact-name: backend-image
+      enable-cache: false
 
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        run: |
-          docker build -t lamsaafyassine/travelo-backend:${{ github.sha }} .
-          docker build -t lamsaafyassine/travelo-backend:latest .
-          docker save lamsaafyassine/travelo-backend:${{ github.sha }} -o backend-image.tar
-
-      - name: Upload image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-image
-          path: backend-image.tar
-          retention-days: 1
   # Règle 1 - Scan de sécurité seulement sur main et PR vers main
   security-scan:
-    runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' || github.base_ref == 'refs/heads/main'
-    steps:
-      - name: Download image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-image
-      - name: Load Docker image
-        run: docker load -i backend-image.tar
-      - name: Run security scan
-        run: |
-          echo "Running security scan"
-          # Ajoutez votre commande de scan ici
-          # Ex: trivy image lamsaafyassine/travelo-backend:${{ github.sha }}
+    uses: Alae-J/travelo-ci-templates/.github/workflows/security-scan.yml@main
+    permissions:
+      contents: read
+      security-events: write
+    with:
+      scan-type: image
+      image-name: lamsaafyassine/travelo-backend
+      artifact-name: backend-image
+      severity: HIGH,CRITICAL
+
   push:
-    runs-on: ubuntu-latest
     needs: [build, security-scan]
     # Règle 2 - Push seulement après merge sur main
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Download image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-image
-
-      - name: Load Docker image
-        run: docker load -i backend-image.tar
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Tag and push Docker image
-        run: |
-          docker tag lamsaafyassine/travelo-backend:${{ github.sha }} lamsaafyassine/travelo-backend:latest
-          docker push lamsaafyassine/travelo-backend:${{ github.sha }}
-          docker push lamsaafyassine/travelo-backend:latest
+    uses: Alae-J/travelo-ci-templates/.github/workflows/docker-push.yml@main
+    with:
+      image-name: lamsaafyassine/travelo-backend
+      artifact-name: backend-image
+      support-version-tags: false
+    secrets:
+      dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
 
   GitOps-k8s-deploy:
-    runs-on: ubuntu-latest
     needs: push
     if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout infra repo
-        uses: actions/checkout@v4
-        with:
-          # Replace with your infra repository if different
-          repository: yassinelamsaaf/travelo-infra
-          token: ${{ secrets.INFRA_REPO_TOKEN }}
-          path: infra
-
-      - name: Update backend image tag
-        run: |
-          VERSION=${{ github.sha }}
-          echo "Updating infra/travelo-k8s/backend.yaml to image tag $VERSION"
-          sed -i "s|image: .*lamsaafyassine/travelo-backend:.*|image: lamsaafyassine/travelo-backend:${VERSION}|" infra/travelo-k8s/backend.yaml || true
-
-      - name: Commit & push changes
-        run: |
-          cd infra
-          git config user.name "github-actions"
-          git config user.email "ci@github.com"
-          git add travelo-k8s/backend.yaml
-          git commit -m "ci: update backend image to ${{ github.sha }}" || echo "no changes to commit"
-          if ! git push origin HEAD:main; then
-            echo "push failed"
-            exit 1
-          fi
+    uses: Alae-J/travelo-ci-templates/.github/workflows/gitops-deploy.yml@main
+    with:
+      image-name: lamsaafyassine/travelo-backend
+      yaml-file: backend.yaml
+      infra-repo: yassinelamsaaf/travelo-infra
+      support-version-tags: false
+    secrets:
+      infra-token: ${{ secrets.INFRA_REPO_TOKEN }}
