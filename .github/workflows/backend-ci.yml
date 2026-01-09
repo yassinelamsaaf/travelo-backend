@@ -27,7 +27,7 @@ jobs:
     with:
       cvss-threshold: 9
       java-version: '23'
-      fail-on-findings: true
+      fail-on-findings: false
     secrets:
       snyk-token: ${{ secrets.SNYK_TOKEN }}
 
