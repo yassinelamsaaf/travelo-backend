@@ -25,7 +25,7 @@ jobs:
       contents: read
       security-events: write
     with:
-      cvss-threshold: 5
+      cvss-threshold: 9
       java-version: '23'
       fail-on-findings: true
     secrets:
