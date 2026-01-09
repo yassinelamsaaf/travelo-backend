@@ -81,7 +81,7 @@ jobs:
     with:
       image-name: lamsaafyassine/travelo-backend
       yaml-file: backend.yaml
-      infra-repo: lamsaafyassine/travelo-infra
+      infra-repo: yassinelamsaaf/travelo-infra
       support-version-tags: false
     secrets:
       infra-token: ${{ secrets.INFRA_REPO_TOKEN }}
