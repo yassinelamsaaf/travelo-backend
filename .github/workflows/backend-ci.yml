@@ -16,7 +16,7 @@ jobs:
       security-events: write
     with:
       config: 'p/java,p/spring,p/owasp-top-ten,p/sql-injection'
-      fail-on-findings: false
+      fail-on-findings: true
 
   sca:
     name: SCA - Maven Dependencies
@@ -25,9 +25,9 @@ jobs:
       contents: read
       security-events: write
     with:
-      cvss-threshold: 9
+      cvss-threshold: 6
       java-version: '23'
-      fail-on-findings: false
+      fail-on-findings: true
     secrets:
       snyk-token: ${{ secrets.SNYK_TOKEN }}
 
