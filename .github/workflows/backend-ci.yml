@@ -15,7 +15,7 @@ jobs:
       contents: read
       security-events: write
     with:
-      config: 'p/java,p/spring,p/owasp-top-ten,p/sql-injection'
+      config: 'p/java,p/security-audit,p/owasp-top-ten'
       fail-on-findings: true
 
   sca:
