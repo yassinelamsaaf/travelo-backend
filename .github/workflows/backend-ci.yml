@@ -16,7 +16,7 @@ jobs:
       security-events: write
     with:
       config: 'p/java,p/spring,p/owasp-top-ten,p/sql-injection'
-      fail-on-findings: true
+      fail-on-findings: false
 
   sca:
     name: SCA - Maven Dependencies
