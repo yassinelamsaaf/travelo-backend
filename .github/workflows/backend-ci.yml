@@ -85,3 +85,17 @@ jobs:
       support-version-tags: false
     secrets:
       infra-token: ${{ secrets.INFRA_REPO_TOKEN }}
+
+  # Security Failure Notifications
+  notify-security-failure:
+    name: Notify Security Failures
+    needs: [sast, sca, container-security]
+    if: always() && (needs.sast.result == 'failure' || needs.sca.result == 'failure' || needs.container-security.result == 'failure')
+    uses: Alae-J/travelo-ci-templates/.github/workflows/notify-slack.yml@main
+    with:
+      app-name: 'Backend'
+      failed-scans: ${{ (needs.sast.result == 'failure' && 'SAST (Semgrep)' || '') }}${{ (needs.sast.result == 'failure' && needs.sca.result == 'failure' && ',' || '') }}${{ (needs.sca.result == 'failure' && 'SCA (OWASP Dependency-Check)' || '') }}${{ ((needs.sast.result == 'failure' || needs.sca.result == 'failure') && needs.container-security.result == 'failure' && ',' || '') }}${{ (needs.container-security.result == 'failure' && 'Container Security (Trivy)' || '') }}
+      workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      branch: ${{ github.ref_name }}
+    secrets:
+      slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
